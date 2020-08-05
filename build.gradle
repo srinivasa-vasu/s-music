@@ -1,43 +1,59 @@
-buildscript {
-    ext {
-        springBootVersion = '2.3.2.RELEASE'
-        javaCfEnvVersion = '2.1.1.RELEASE'
-    }
-
-    repositories {
-        jcenter()
-        // mavenCentral()
-        maven {
-            // url "https://repo.spring.io/plugins-release" 
-            url = System.getenv('LOCAL_REPO')
-            name = "maven-main-cache"
-        }
-    }
-
-    dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
-        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4+"
-    }
-}
+//buildscript {
+//    ext {
+//        springBootVersion = '2.3.2.RELEASE'
+//        javaCfEnvVersion = '2.1.1.RELEASE'
+//    }
+//
+//    repositories {
+////        jcenter()
+//        mavenCentral()
+//        maven {
+////            url "https://repo.spring.io/plugins-release",
+//            url "https://repo.spring.io/snapshot"
+//            // url = System.getenv('LOCAL_REPO')
+//            name = "maven-main-cache"
+//        }
+//    }
+//
+//    dependencies {
+//        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+////        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4+"
+//    }
+//}
 
 plugins {
-  id "org.sonarqube" version "3.0"
-  id "com.jfrog.artifactory" version "4.16.1"
+    id 'org.springframework.boot' version '2.3.2.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+    id 'java'
+//    id "org.sonarqube" version "3.0"
+//    id "com.jfrog.artifactory" version "4.16.1"
 }
 
-apply plugin: 'java'
+//apply plugin: 'java'
 
 apply plugin: 'eclipse-wtp'
 apply plugin: 'idea'
 
-apply plugin: 'org.springframework.boot'
-apply plugin: 'io.spring.dependency-management'
-apply plugin: 'maven-publish'
+//apply plugin: 'org.springframework.boot'
+//apply plugin: 'io.spring.dependency-management'
+//apply plugin: 'maven-publish'
 
 version = '1.0'
 
+//repositories {
+//    add buildscript.repositories.getByName("maven-main-cache")
+//}
+
 repositories {
-    add buildscript.repositories.getByName("maven-main-cache")
+    mavenCentral()
+    maven { url 'https://repo.spring.io/snapshot' }
+}
+
+ext {
+    set('wavefrontVersion', "2.0.0-SNAPSHOT")
+    set('springCloudVersion', "Hoxton.SR6")
+    springBootVersion = '2.3.2.RELEASE'
+    javaCfEnvVersion = '2.1.1.RELEASE'
 }
 
 dependencies {
@@ -70,7 +86,10 @@ dependencies {
     implementation "org.webjars:angular-ui-bootstrap:0.10.0-1"
     implementation "org.webjars:jquery:2.1.0-2"
 
-    //implementation "io.micrometer:micrometer-registry-prometheus"
+    implementation "io.micrometer:micrometer-registry-prometheus"
+    implementation "com.wavefront:wavefront-spring-boot-starter"
+    implementation "org.springframework.cloud:spring-cloud-starter-sleuth"
+    implementation "io.micrometer:micrometer-registry-prometheus"
     //implementation "io.micrometer:micrometer-registry-wavefront"
 
     //implementation "org.springframework.cloud.bazaar.connector:spring-cloud-cloudfoundry-bazaar-connector:Bazaar.RC1"
@@ -84,38 +103,46 @@ dependencies {
     testImplementation "org.springframework.boot:spring-boot-starter-test"
 }
 
-artifactory {
-    contextUrl = System.getenv('LOCAL_REPO')
-    publish {
-        repository {
-            repoKey = 'gradle-dev-local'
-            username = System.getenv('REPO_KEY')
-            password = System.getenv('REPO_SECRET')
-            maven = true
-        }
-        defaults {
-            publications("mavenJava")
-        }
-    }
-    resolve {
-        repository {
-            repoKey = 'gradle-dev'
-            username = System.getenv('REPO_KEY')
-            password = System.getenv('REPO_SECRET')
-            maven = true
-            
-        }
+dependencyManagement {
+    imports {
+        mavenBom "com.wavefront:wavefront-spring-boot-bom:${wavefrontVersion}"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
     }
 }
 
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-            artifact bootJar
-        }
-    }
-}
+
+// artifactory {
+//     contextUrl = System.getenv('LOCAL_REPO')
+//     publish {
+//         repository {
+//             repoKey = 'gradle-dev-local'
+//             username = System.getenv('REPO_KEY')
+//             password = System.getenv('REPO_SECRET')
+//             maven = true
+//         }
+//         defaults {
+//             publications("mavenJava")
+//         }
+//     }
+//     resolve {
+//         repository {
+//             repoKey = 'gradle-dev'
+//             username = System.getenv('REPO_KEY')
+//             password = System.getenv('REPO_SECRET')
+//             maven = true
+            
+//         }
+//     }
+// }
+
+// publishing {
+//     publications {
+//         mavenJava(MavenPublication) {
+//             from components.java
+//             artifact bootJar
+//         }
+//     }
+// }
 
 jar {
     archiveBaseName = "spring-music"
